@@ -1,0 +1,60 @@
+name: smart_budget
+description: A new Flutter project.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 1. Dependensi untuk Autentikasi Online
+  supabase_flutter: ^2.5.0
+  flutter_dotenv: ^6.0.0
+
+  # 2. Dependensi untuk Database Lokal
+  drift: ^2.15.0
+  sqlite3_flutter_libs: ^0.5.0
+  path_provider: ^2.0.0
+  crypto: ^3.0.3
+
+  # 3. Dependensi UI (sudah ada)
+  pie_chart: ^5.4.0
+  intl: ^0.20.2
+
+  # 4. Dependasi untuk Router
+  go_router: ^14.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Generator kode untuk Drift
+  drift_dev: ^2.15.0
+  build_runner: ^2.4.0
+
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.0
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env # Tambahkan kembali .env untuk Supabase
+    - assets/images/
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/logo.png"
+
+flutter_native_splash:
+  background_image: assets/images/splash.png
+  fullscreen: true
+
+  android_12:
+    background_image: assets/images/splash.png
+    fullscreen: true
