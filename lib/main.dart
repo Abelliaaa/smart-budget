@@ -60,15 +60,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Gunakan MaterialApp.router untuk mengintegrasikan go_router
     return MaterialApp.router(
       title: 'Smart Budget',
       theme: ThemeData(
-        primarySwatch: Colors.brown,
-        scaffoldBackgroundColor: const Color.fromARGB(255, 228, 212, 212),
+        primaryColor: Colors.white,
+        scaffoldBackgroundColor: Colors.white,
+        fontFamily: 'Poppins',
       ),
-      // Atur konfigurasi router dari file app_router.dart
-      routerConfig: AppRouter.router,
+      routerConfig: AppRouter.router, // go_router config
     );
   }
 }
