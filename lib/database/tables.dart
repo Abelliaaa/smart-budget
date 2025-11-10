@@ -7,8 +7,7 @@ class Transactions extends Table {
   TextColumn get description => text().withLength(min: 1)();
   RealColumn get amount => real()();
   DateTimeColumn get date => dateTime()();
-  BoolColumn get isIncome => boolean()(); // True for income, false for expense
-
-  // INI ADALAH KUNCINYA: Kolom untuk menyimpan ID unik dari Supabase
+  BoolColumn get isIncome => boolean()(); 
   TextColumn get supabaseUserId => text()();
+  TextColumn get note => text().nullable()();
 }

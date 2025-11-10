@@ -72,6 +72,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  collection: ^1.18.0
+  flutter_localizations:
+    sdk: flutter
 
   # 🔐 Autentikasi & Cloud Database (Supabase)
   supabase_flutter: ^2.5.0
@@ -85,7 +88,7 @@ dependencies:
   crypto: ^3.0.3
 
   # 🌐 Sinkronisasi & Preferensi
-  connectivity_plus: ^4.0.1
+  connectivity_plus: ^7.0.0
   shared_preferences: ^2.2.2
 
   # 🎨 UI & Format
@@ -94,6 +97,7 @@ dependencies:
 
   # 🧭 Router
   go_router: ^16.2.4
+  async: ^2.13.0
 
 dev_dependencies:
   flutter_test:

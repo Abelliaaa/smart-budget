@@ -15,17 +15,19 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 1;
 
-  // ... (method addTransaction dan getTransactionsForUser tetap ada)
+  // Menambah satu transaksi baru
+  Future<int> addTransaction(TransactionsCompanion entry) {
+    return into(transactions).insert(entry);
+  }
+
+  // Mengambil semua transaksi untuk user tertentu 
   Future<List<Transaction>> getTransactionsForUser(String userId) {
     return (select(transactions)
           ..where((tbl) => tbl.supabaseUserId.equals(userId)))
         .get();
   }
-
-  Future<int> addTransaction(TransactionsCompanion entry) {
-    return into(transactions).insert(entry);
-  }
-
+  
+  // Mengawasi semua transaksi untuk user dalam rentang tanggal
   Stream<List<Transaction>> watchAllTransactionsForUser(
       String userId, DateTime startDate, DateTime endDate) {
     return (select(transactions)
@@ -35,7 +37,7 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
-  // TAMBAHKAN METHOD INI
+  // Mengawasi transaksi (pemasukan/pengeluaran) untuk user
   Stream<List<Transaction>> watchTransactionsForUser(
       String userId, bool isIncome) {
     return (select(transactions)
@@ -45,12 +47,43 @@ class AppDatabase extends _$AppDatabase {
               [(t) => OrderingTerm.desc(t.date)])) // Urutkan dari yang terbaru
         .watch();
   }
+
+  Stream<double> watchTotalIncome(String userId, DateTime startDate, DateTime endDate) {
+    final amount = transactions.amount;
+    final query = select(transactions)
+      ..where((tbl) => tbl.supabaseUserId.equals(userId))
+      ..where((tbl) => tbl.isIncome.equals(true))
+      ..where((tbl) => tbl.date.isBetween(Variable(startDate), Variable(endDate)));
+      
+    // Menjumlahkan semua nilai 'amount' dari baris yang cocok
+    return query.map((row) => row.amount).watch().map((amounts) => amounts.fold(0.0, (prev, curr) => prev + curr));
+  }
+
+  Stream<double> watchTotalExpense(String userId, DateTime startDate, DateTime endDate) {
+    final amount = transactions.amount;
+    final query = select(transactions)
+      ..where((tbl) => tbl.supabaseUserId.equals(userId))
+      ..where((tbl) => tbl.isIncome.equals(false))
+      ..where((tbl) => tbl.date.isBetween(Variable(startDate), Variable(endDate)));
+      
+    // Menjumlahkan semua nilai 'amount' dari baris yang cocok
+    return query.map((row) => row.amount).watch().map((amounts) => amounts.fold(0.0, (prev, curr) => prev + curr));
+  }
+
+  Stream<List<Transaction>> watchRecentTransactions(String userId, int limit) {
+    final query = select(transactions)
+      ..where((tbl) => tbl.supabaseUserId.equals(userId))
+      ..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)])
+      ..limit(limit);
+      
+    return query.watch();
+  }
 }
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'db.sqlite'));
-    return NativeDatabase.createInBackground(file);
+    return NativeDatabase(file);
   });
 }

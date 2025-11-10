@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../database/database.dart'; // pastikan impor ini sesuai dengan lokasimu
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final AppDatabase database; // ⬅️ tambahkan ini
+
+  const ProfileScreen({
+    super.key,
+    required this.database, // ⬅️ tambahkan ini juga
+  });
 
   Future<void> _signOut(BuildContext context) async {
     try {
@@ -11,6 +17,25 @@ class ProfileScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Gagal logout: ${e.toString()}")),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteAllTransactions(BuildContext context) async {
+    try {
+      // 🧹 panggil delete langsung ke tabel drift
+      await database.delete(database.transactions).go();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Semua data transaksi berhasil dihapus")),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal menghapus data: ${e.toString()}")),
         );
       }
     }
@@ -29,10 +54,7 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Profil Saya',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Profil Saya', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -45,10 +67,7 @@ class ProfileScreen extends StatelessWidget {
           children: [
             Card(
               elevation: 4,
-              shadowColor: Colors.brown.withOpacity(0.2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Row(
@@ -65,52 +84,39 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 20),
-                    // ===== PERBAIKAN DI SINI =====
-                    // Bungkus Column dengan Expanded
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            userName,
-                            style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow
-                                .ellipsis, // Mencegah teks panjang meluber
-                          ),
+                          Text(userName,
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 5),
-                          Text(
-                            userEmail,
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.grey),
-                            overflow: TextOverflow
-                                .ellipsis, // Mencegah teks panjang meluber
-                          ),
+                          Text(userEmail,
+                              style: const TextStyle(fontSize: 14, color: Colors.grey)),
                         ],
                       ),
                     ),
-                    // ==============================
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 30),
-            _ProfileMenuItem(
-              icon: Icons.person_outline,
-              title: 'Edit Profil',
-              onTap: () {},
-            ),
-            _ProfileMenuItem(
-              icon: Icons.settings_outlined,
-              title: 'Pengaturan',
-              onTap: () {},
-            ),
-            _ProfileMenuItem(
-              icon: Icons.help_outline,
-              title: 'Bantuan & Dukungan',
-              onTap: () {},
-            ),
+            _ProfileMenuItem(icon: Icons.person_outline, title: 'Edit Profil', onTap: () {}),
+            _ProfileMenuItem(icon: Icons.settings_outlined, title: 'Pengaturan', onTap: () {}),
+            _ProfileMenuItem(icon: Icons.help_outline, title: 'Bantuan & Dukungan', onTap: () {}),
             const Spacer(),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.delete_forever),
+              label: const Text('Hapus Semua Data Transaksi'),
+              onPressed: () => _deleteAllTransactions(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.shade400,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 10),
             ElevatedButton.icon(
               icon: const Icon(Icons.logout),
               label: const Text('Logout'),
@@ -119,9 +125,7 @@ class ProfileScreen extends StatelessWidget {
                 backgroundColor: Colors.red.shade400,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 20),
@@ -148,10 +152,7 @@ class _ProfileMenuItem extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shadowColor: Colors.brown.withOpacity(0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Icon(icon, color: Colors.brown),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),

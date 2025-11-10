@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../database/database.dart';
-import '../home/dashboard_page.dart';
+import 'dashboard_page.dart';
 import '../profile/profile_screen.dart';
-import '../add_transaction/add_transaction.dart';
-import '../../widgets/navigation/persistent_bottom_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   final AppDatabase database;
@@ -20,46 +19,62 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _dashboardNavigatorKey = GlobalKey<NavigatorState>();
-  final _addNavigatorKey = GlobalKey<NavigatorState>();
-  final _profileNavigatorKey = GlobalKey<NavigatorState>();
+  int _selectedIndex = 0;
+  late final List<Widget> _pages;
 
-  void _refreshDashboard() {
-    setState(() {}); // buat dashboard reload setelah tambah transaksi
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      DashboardPage(database: widget.database),
+      ProfileScreen(database: widget.database),
+    ];
+  }
+  
+  void _onItemTapped(int index) {
+    if (index == 1) { // Tombol "Tambah"
+      context.push(
+        '/add-transaction',
+        extra: {
+          'onTransactionAdded': () {
+            setState(() {});
+          },
+        },
+      );
+    } else {
+      setState(() {
+        _selectedIndex = (index > 1) ? 1 : index;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return PersistentBottomBarScaffold(
-      items: [
-        // ===================== TAB BERANDA =====================
-        PersistentTabItem(
-          tab: const DashboardPage(),
-          navigatorKey: _dashboardNavigatorKey,
-          icon: Icons.home,
-          title: 'Beranda',
-        ),
-
-        // ===================== TAB TAMBAH TRANSAKSI =====================
-        PersistentTabItem(
-          tab: AddTransactionPage(
-            database: widget.database,
-            userId: widget.userId,
-            onTransactionAdded: _refreshDashboard,
+    return Scaffold(
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: (_selectedIndex >= 1) ? _selectedIndex + 1 : _selectedIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: Colors.brown,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Beranda',
           ),
-          navigatorKey: _addNavigatorKey,
-          icon: Icons.add_circle_outline,
-          title: 'Tambah',
-        ),
-
-        // ===================== TAB PROFIL =====================
-        PersistentTabItem(
-          tab: const ProfileScreen(),
-          navigatorKey: _profileNavigatorKey,
-          icon: Icons.person,
-          title: 'Profil',
-        ),
-      ],
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline, size: 32),
+            activeIcon: Icon(Icons.add_circle, size: 32),
+            label: 'Tambah',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profil',
+          ),
+        ],
+        type: BottomNavigationBarType.fixed,
+      ),
     );
   }
 }

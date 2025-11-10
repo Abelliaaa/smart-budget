@@ -1,5 +1,3 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
-
 part of 'database.dart';
 
 // ignore_for_file: type=lint
@@ -53,9 +51,14 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<String> supabaseUserId = GeneratedColumn<String>(
       'supabase_user_id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+      'note', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, description, amount, date, isIncome, supabaseUserId];
+      [id, description, amount, date, isIncome, supabaseUserId, note];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -103,6 +106,10 @@ class $TransactionsTable extends Transactions
     } else if (isInserting) {
       context.missing(_supabaseUserIdMeta);
     }
+    if (data.containsKey('note')) {
+      context.handle(
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+    }
     return context;
   }
 
@@ -124,6 +131,8 @@ class $TransactionsTable extends Transactions
           .read(DriftSqlType.bool, data['${effectivePrefix}is_income'])!,
       supabaseUserId: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}supabase_user_id'])!,
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note']),
     );
   }
 
@@ -140,13 +149,15 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final DateTime date;
   final bool isIncome;
   final String supabaseUserId;
+  final String? note;
   const Transaction(
       {required this.id,
       required this.description,
       required this.amount,
       required this.date,
       required this.isIncome,
-      required this.supabaseUserId});
+      required this.supabaseUserId,
+      this.note});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -156,6 +167,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     map['date'] = Variable<DateTime>(date);
     map['is_income'] = Variable<bool>(isIncome);
     map['supabase_user_id'] = Variable<String>(supabaseUserId);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
     return map;
   }
 
@@ -167,6 +181,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       date: Value(date),
       isIncome: Value(isIncome),
       supabaseUserId: Value(supabaseUserId),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
     );
   }
 
@@ -180,6 +195,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       date: serializer.fromJson<DateTime>(json['date']),
       isIncome: serializer.fromJson<bool>(json['isIncome']),
       supabaseUserId: serializer.fromJson<String>(json['supabaseUserId']),
+      note: serializer.fromJson<String?>(json['note']),
     );
   }
   @override
@@ -192,6 +208,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'date': serializer.toJson<DateTime>(date),
       'isIncome': serializer.toJson<bool>(isIncome),
       'supabaseUserId': serializer.toJson<String>(supabaseUserId),
+      'note': serializer.toJson<String?>(note),
     };
   }
 
@@ -201,7 +218,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           double? amount,
           DateTime? date,
           bool? isIncome,
-          String? supabaseUserId}) =>
+          String? supabaseUserId,
+          Value<String?> note = const Value.absent()}) =>
       Transaction(
         id: id ?? this.id,
         description: description ?? this.description,
@@ -209,6 +227,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
         date: date ?? this.date,
         isIncome: isIncome ?? this.isIncome,
         supabaseUserId: supabaseUserId ?? this.supabaseUserId,
+        note: note.present ? note.value : this.note,
       );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
@@ -221,6 +240,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       supabaseUserId: data.supabaseUserId.present
           ? data.supabaseUserId.value
           : this.supabaseUserId,
+      note: data.note.present ? data.note.value : this.note,
     );
   }
 
@@ -232,14 +252,15 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ..write('amount: $amount, ')
           ..write('date: $date, ')
           ..write('isIncome: $isIncome, ')
-          ..write('supabaseUserId: $supabaseUserId')
+          ..write('supabaseUserId: $supabaseUserId, ')
+          ..write('note: $note')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, description, amount, date, isIncome, supabaseUserId);
+  int get hashCode => Object.hash(
+      id, description, amount, date, isIncome, supabaseUserId, note);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -249,7 +270,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           other.amount == this.amount &&
           other.date == this.date &&
           other.isIncome == this.isIncome &&
-          other.supabaseUserId == this.supabaseUserId);
+          other.supabaseUserId == this.supabaseUserId &&
+          other.note == this.note);
 }
 
 class TransactionsCompanion extends UpdateCompanion<Transaction> {
@@ -259,6 +281,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<DateTime> date;
   final Value<bool> isIncome;
   final Value<String> supabaseUserId;
+  final Value<String?> note;
   const TransactionsCompanion({
     this.id = const Value.absent(),
     this.description = const Value.absent(),
@@ -266,6 +289,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.date = const Value.absent(),
     this.isIncome = const Value.absent(),
     this.supabaseUserId = const Value.absent(),
+    this.note = const Value.absent(),
   });
   TransactionsCompanion.insert({
     this.id = const Value.absent(),
@@ -274,6 +298,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     required DateTime date,
     required bool isIncome,
     required String supabaseUserId,
+    this.note = const Value.absent(),
   })  : description = Value(description),
         amount = Value(amount),
         date = Value(date),
@@ -286,6 +311,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<DateTime>? date,
     Expression<bool>? isIncome,
     Expression<String>? supabaseUserId,
+    Expression<String>? note,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -294,6 +320,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (date != null) 'date': date,
       if (isIncome != null) 'is_income': isIncome,
       if (supabaseUserId != null) 'supabase_user_id': supabaseUserId,
+      if (note != null) 'note': note,
     });
   }
 
@@ -303,7 +330,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       Value<double>? amount,
       Value<DateTime>? date,
       Value<bool>? isIncome,
-      Value<String>? supabaseUserId}) {
+      Value<String>? supabaseUserId,
+      Value<String?>? note}) {
     return TransactionsCompanion(
       id: id ?? this.id,
       description: description ?? this.description,
@@ -311,6 +339,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       date: date ?? this.date,
       isIncome: isIncome ?? this.isIncome,
       supabaseUserId: supabaseUserId ?? this.supabaseUserId,
+      note: note ?? this.note,
     );
   }
 
@@ -335,6 +364,9 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (supabaseUserId.present) {
       map['supabase_user_id'] = Variable<String>(supabaseUserId.value);
     }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
     return map;
   }
 
@@ -346,7 +378,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('amount: $amount, ')
           ..write('date: $date, ')
           ..write('isIncome: $isIncome, ')
-          ..write('supabaseUserId: $supabaseUserId')
+          ..write('supabaseUserId: $supabaseUserId, ')
+          ..write('note: $note')
           ..write(')'))
         .toString();
   }
@@ -371,6 +404,7 @@ typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
   required DateTime date,
   required bool isIncome,
   required String supabaseUserId,
+  Value<String?> note,
 });
 typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
     Function({
@@ -380,6 +414,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
   Value<DateTime> date,
   Value<bool> isIncome,
   Value<String> supabaseUserId,
+  Value<String?> note,
 });
 
 class $$TransactionsTableFilterComposer
@@ -409,6 +444,9 @@ class $$TransactionsTableFilterComposer
   ColumnFilters<String> get supabaseUserId => $composableBuilder(
       column: $table.supabaseUserId,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnFilters(column));
 }
 
 class $$TransactionsTableOrderingComposer
@@ -438,6 +476,9 @@ class $$TransactionsTableOrderingComposer
   ColumnOrderings<String> get supabaseUserId => $composableBuilder(
       column: $table.supabaseUserId,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnOrderings(column));
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -466,6 +507,9 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<String> get supabaseUserId => $composableBuilder(
       column: $table.supabaseUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
 }
 
 class $$TransactionsTableTableManager extends RootTableManager<
@@ -500,6 +544,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
             Value<DateTime> date = const Value.absent(),
             Value<bool> isIncome = const Value.absent(),
             Value<String> supabaseUserId = const Value.absent(),
+            Value<String?> note = const Value.absent(),
           }) =>
               TransactionsCompanion(
             id: id,
@@ -508,6 +553,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
             date: date,
             isIncome: isIncome,
             supabaseUserId: supabaseUserId,
+            note: note,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -516,6 +562,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
             required DateTime date,
             required bool isIncome,
             required String supabaseUserId,
+            Value<String?> note = const Value.absent(),
           }) =>
               TransactionsCompanion.insert(
             id: id,
@@ -524,6 +571,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
             date: date,
             isIncome: isIncome,
             supabaseUserId: supabaseUserId,
+            note: note,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

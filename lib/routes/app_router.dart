@@ -3,23 +3,28 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// Import semua halaman 
+// Import semua halaman yang akan digunakan
+import '../database/database.dart';
 import '../screens/auth/auth_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/splash/splash_screen.dart';
-import '../database/database.dart'; 
+
+// 🔹 1. PERBAIKI PATH IMPORT
+import '../screens/add_transaction/add_transaction.dart';
+import '../screens/home/category_detail_page.dart';
 
 class AppRouter {
-  static final router = GoRouter(
+  final AppDatabase database;
+
+  AppRouter({required this.database});
+
+  late final GoRouter router = GoRouter(
+    // 🔹 2. GUNAKAN SUPABASE LANGSUNG UNTUK OTENTIKASI
     refreshListenable: GoRouterRefreshStream(
       Supabase.instance.client.auth.onAuthStateChange,
     ),
-
-    // Halaman awal ketika aplikasi dibuka
     initialLocation: '/splash',
-
-    // Daftar semua rute aplikasi
     routes: [
       GoRoute(
         path: '/splash',
@@ -31,59 +36,64 @@ class AppRouter {
       ),
       GoRoute(
         path: '/auth',
-        pageBuilder: (context, state) => const MaterialPage(
-          fullscreenDialog: true,
-          child: AuthScreen(),
-        ),
+        builder: (context, state) => const AuthScreen(),
       ),
       GoRoute(
         path: '/home',
         builder: (context, state) {
-          // Inisialisasi database Drift
-          final database = AppDatabase();
-
-          // Ambil user
-          final user = Supabase.instance.client.auth.currentUser;
-          final userId = user?.id ?? '';
-
-          // Kirim parameter ke HomeScreen
+          final userId = Supabase.instance.client.auth.currentUser!.id;
           return HomeScreen(
             database: database,
             userId: userId,
           );
         },
+        routes: [
+          GoRoute(
+            path: 'category-detail',
+            builder: (context, state) {
+              final args = state.extra as Map<String, dynamic>;
+              return CategoryDetailPage(
+                category: args['category'] as String,
+                transactions: args['transactions'] as List<Transaction>,
+                color: args['color'] as Color,
+                icon: args['icon'] as IconData,
+              );
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/add-transaction',
+        pageBuilder: (context, state) {
+          final args = state.extra as Map<String, dynamic>;
+          final userId = Supabase.instance.client.auth.currentUser!.id;
+          return MaterialPage(
+            fullscreenDialog: true,
+            child: AddTransactionPage(
+              database: database,
+              userId: userId,
+              onTransactionAdded: args['onTransactionAdded'] as VoidCallback,
+            ),
+          );
+        },
       ),
     ],
-
-    // Logika redirect otomatis
     redirect: (BuildContext context, GoRouterState state) {
-      final bool isLoggedIn =
-          Supabase.instance.client.auth.currentSession != null;
-      final String location = state.matchedLocation;
+      final loggedIn = Supabase.instance.client.auth.currentSession != null;
+      final location = state.matchedLocation;
 
-      // Jika belum login dan bukan di halaman publik
-      if (!isLoggedIn &&
-          location != '/splash' &&
-          location != '/onboarding' &&
-          location != '/auth') {
-        return '/onboarding';
-      }
-
-      // Jika sudah login dan masih di halaman publik
-      if (isLoggedIn &&
-          (location == '/splash' ||
-              location == '/onboarding' ||
-              location == '/auth')) {
+      if (loggedIn && (location == '/splash' || location == '/onboarding' || location == '/auth')) {
         return '/home';
       }
-
-      // Tidak ada redirect, tetap di halaman sekarang
+      if (!loggedIn && (location.startsWith('/home') || location == '/add-transaction')) {
+        return '/auth';
+      }
       return null;
     },
   );
 }
 
-// Class bantuan agar GoRouter otomatis update
+// Helper class untuk GoRouter refresh
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
