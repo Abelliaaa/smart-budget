@@ -1,5 +1,5 @@
 {
-    "dart.flutterSdkPath": "C:\\src\\flutter",
+    "dart.flutterSdkPath": "C:\\Flutter\\bin",
     "android-ios-emulator.emulatorPath": "C:\\Users\\abeia\\AppData\\Local\\Android\\Sdk\\emulator",
     "android-ios-emulator.adbPath": "C:\\Users\\abeia\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe"
 

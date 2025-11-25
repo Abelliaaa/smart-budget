@@ -1,34 +1,61 @@
 // lib/services/auth_service.dart
 
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'supabase_service.dart';
 
 class AuthService extends ChangeNotifier {
-  final SupabaseClient _supabase;
-  late StreamSubscription<AuthState> _authStateSubscription;
+  final SupabaseClient _supabase;          // client supabase
+  final SupabaseService _supabaseService;  // service untuk sync
+  late final StreamSubscription<AuthState> _authSubscription;
+  Session? _session;
 
-  AuthService(this._supabase) {
-    // Memulai listener saat service dibuat
+  AuthService(
+    this._supabase,
+    this._supabaseService,
+  ) {
     _listenToAuthState();
   }
 
-  Session? _currentSession;
+  // GETTERS
+  Session? get session => _session;
+  String? get currentUserId => _supabase.auth.currentUser?.id;
 
-  bool get isLoggedIn => _currentSession != null;
-  String? get userId => _currentSession?.user.id;
-
+  // ============================================================
+  // 🔊 LISTEN SUPABASE AUTH EVENTS
+  // ============================================================
   void _listenToAuthState() {
-    _authStateSubscription = _supabase.auth.onAuthStateChange.listen((data) {
-      _currentSession = data.session;
-      // Memberi tahu router bahwa status login telah berubah
-      notifyListeners();
-    });
+    _authSubscription = _supabase.auth.onAuthStateChange.listen(
+      (AuthState state) async {
+        _session = state.session;
+        notifyListeners();
+
+        // Jika user LOGIN
+        if (_session != null) {
+          try {
+            await _supabaseService.syncOnLogin();
+          } catch (e) {
+            debugPrint('[AuthService] syncOnLogin ERROR → $e');
+          }
+        }
+      },
+      onError: (error) {
+        debugPrint('[AuthService] ERROR on auth stream → $error');
+      },
+    );
   }
 
+  // ============================================================
+  // 🔌 DISPOSE LISTENER
+  // ============================================================
   @override
   void dispose() {
-    _authStateSubscription.cancel();
+    try {
+      _authSubscription.cancel();
+    } catch (_) {
+      // Just in case stream already closed
+    }
     super.dispose();
   }
 }

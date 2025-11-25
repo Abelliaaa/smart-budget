@@ -34,11 +34,14 @@ class _PersistentBottomBarScaffoldState
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) {
+      // 🔑 PERBAIKAN: Mengganti onPopInvoked dengan onPopInvokedWithResult
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
         if (didPop) return;
 
         final navigator =
             widget.items[_selectedIndex].navigatorKey.currentState;
+            
+        // Logika untuk pop pada tab navigator saat ini
         if (navigator != null && navigator.canPop()) {
           navigator.pop();
         }

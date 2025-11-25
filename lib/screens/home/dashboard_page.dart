@@ -1,3 +1,5 @@
+// File: lib/screens/home/dashboard_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,35 +11,27 @@ import 'category_detail_page.dart';
 
 class DashboardPage extends StatefulWidget {
   final AppDatabase database;
-  const DashboardPage({super.key, required this.database});
+  final String userId; 
+
+  const DashboardPage({
+    super.key, 
+    required this.database,
+    required this.userId, 
+  });
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  // State untuk dropdown
   late int _selectedYear;
   late int _selectedMonth;
-
-  // Opsi untuk dropdown
   late List<int> _yearOptions;
+  
   final List<String> _monthNames = [
-    'Januari', 
-    'Februari', 
-    'Maret', 
-    'April', 
-    'Mei', 
-    'Juni', 
-    'Juli',
-    'Agustus', 
-    'September', 
-    'Oktober', 
-    'November', 
-    'Desember',
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
+    'Agustus', 'September', 'Oktober', 'November', 'Desember',
   ];
-
-  // State untuk query database
   late DateTime _startDate;
   late DateTime _endDate;
 
@@ -45,12 +39,10 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     final now = DateTime.now();
-
     _yearOptions = List.generate(11, (index) => now.year - 5 + index);
     _selectedYear = now.year;
     _selectedMonth = now.month;
     _updateDateRange();
-    
     Intl.defaultLocale = 'id_ID';
   }
 
@@ -63,12 +55,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = Supabase.instance.client.auth.currentUser;
-    if (currentUser == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    final userId = currentUser.id;
-    final userName = currentUser.userMetadata?['name'] ?? 'Pengguna';
+    final userId = widget.userId; 
+    
+    final userName = Supabase.instance.client.auth.currentUser?.userMetadata?['name'] ?? 'Pengguna';
 
     return Scaffold(
       appBar: AppBar(
@@ -90,7 +79,8 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: StreamBuilder<List<Transaction>>(
-            stream: widget.database.watchAllTransactionsForUser(userId, _startDate, _endDate),
+            stream: widget.database.transactionDao.watchForUserInMonth(widget.userId, _selectedYear, _selectedMonth)
+,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -99,10 +89,11 @@ class _DashboardPageState extends State<DashboardPage> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _FinancialSummaryCard(
+                  // Penggunaan widget _FinancialSummaryCard
+                  _FinancialSummaryCard( 
                     allTransactions: transactions,
                     yearOptions: _yearOptions,
-                    monthNames: _monthNames,
+                    monthNames: _monthNames, 
                     selectedYear: _selectedYear,
                     selectedMonth: _selectedMonth,
                     onYearChanged: (newYear) {
@@ -123,7 +114,8 @@ class _DashboardPageState extends State<DashboardPage> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  _TransactionDetailsCard(allTransactions: transactions),
+                  // Penggunaan widget _TransactionDetailsCard
+                  _TransactionDetailsCard(allTransactions: transactions), 
                 ],
               );
             },
@@ -134,7 +126,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
-// --- WIDGET ---
+// --- DEFINISI WIDGET PEMBANTU DIMULAI DI SINI ---
 
 class _FinancialSummaryCard extends StatelessWidget {
   final List<Transaction> allTransactions;
@@ -148,17 +140,17 @@ class _FinancialSummaryCard extends StatelessWidget {
   const _FinancialSummaryCard({
     required this.allTransactions,
     required this.yearOptions,
-    required this.monthNames,
+    required this.monthNames, 
     required this.selectedYear,
     required this.selectedMonth,
     required this.onYearChanged,
-    required this.onMonthChanged,
+    required this.onMonthChanged, 
   });
 
   @override
   Widget build(BuildContext context) {
-    final double totalIncome = allTransactions.where((t) => t.isIncome).fold(0, (sum, item) => sum + item.amount);
-    final double totalExpense = allTransactions.where((t) => !t.isIncome).fold(0, (sum, item) => sum + item.amount);
+    final double totalIncome = allTransactions.where((t) => t.isIncome).fold(0.0, (sum, item) => sum + item.nominal);
+    final double totalExpense = allTransactions.where((t) => !t.isIncome).fold(0.0, (sum, item) => sum + item.nominal);
     final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
     Widget buildDropdown({
@@ -255,13 +247,13 @@ class __TransactionDetailsCardState extends State<_TransactionDetailsCard> {
     Map<String, double> pieDataMap = {};
     if (filteredTransactions.isNotEmpty) {
       for (var transaction in filteredTransactions) {
-        pieDataMap[transaction.description] = (pieDataMap[transaction.description] ?? 0) + transaction.amount;
+        pieDataMap[transaction.kategori] = (pieDataMap[transaction.kategori] ?? 0) + transaction.nominal;
       }
     } else {
       pieDataMap["Belum ada data"] = 1;
     }
 
-    final groupedByCategory = groupBy(filteredTransactions, (Transaction t) => t.description);
+    final groupedByCategory = groupBy(filteredTransactions, (Transaction t) => t.kategori);
     final sortedCategories = groupedByCategory.keys.toList();
 
     final Map<String, Color> categoryColors = { 
@@ -274,11 +266,11 @@ class __TransactionDetailsCardState extends State<_TransactionDetailsCard> {
       "Cicilan/sewa rumah": const Color.fromARGB(255, 255, 77, 22), 
       "Kendaraan": const Color.fromARGB(255, 255, 143, 7), 
       "Pendidikan": const Color.fromARGB(255, 224, 153, 94), 
-      "Kebutuhan Pokok": const Color.fromARGB(255, 254, 83, 83), 
+      "Kebutuhan pokok": const Color.fromARGB(255, 254, 83, 83), 
       "Pakaian": const Color.fromARGB(255, 225, 140, 109), 
       "Perawatan diri": const Color.fromARGB(255, 225, 120, 120), 
       "Hiburan": const Color.fromARGB(255, 245, 136, 132), 
-      "Kouta/Internet": const Color.fromARGB(255, 255, 146, 139), 
+      "Kuota/Internet": const Color.fromARGB(255, 255, 146, 139), 
       "Kebutuhan elektronik": const Color.fromARGB(255, 241, 139, 115), 
       "Pengeluaran sosial": const Color.fromARGB(255, 245, 136, 69), 
       "Lainnya": Colors.grey, };
@@ -293,11 +285,11 @@ class __TransactionDetailsCardState extends State<_TransactionDetailsCard> {
       "Cicilan/sewa rumah": Icons.home, 
       "Kendaraan": Icons.directions_car, 
       "Pendidikan": Icons.school, 
-      "Kebutuhan Pokok": Icons.shopping_basket, 
+      "Kebutuhan pokok": Icons.shopping_basket, 
       "Pakaian": Icons.checkroom, 
       "Perawatan diri": Icons.spa, 
       "Hiburan": Icons.movie, 
-      "Kouta/Internet": Icons.wifi, 
+      "Kuota/Internet": Icons.wifi, 
       "Kebutuhan elektronik": Icons.devices, 
       "Pengeluaran sosial": Icons.people, 
       "Lainnya": Icons.more_horiz, };
@@ -378,7 +370,7 @@ class _CategoryGroupTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalAmount = transactions.fold<double>(0, (sum, item) => sum + item.amount);
+    final totalAmount = transactions.fold<double>(0.0, (sum, item) => sum + item.nominal);
     final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
     final sign = transactions.first.isIncome ? '+' : '-';
 
@@ -387,7 +379,7 @@ class _CategoryGroupTile extends StatelessWidget {
       color: Colors.white,
       margin: const EdgeInsets.symmetric(vertical: 6),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell( // <-- Menggunakan InkWell agar bisa di-tap
+      child: InkWell( 
         onTap: () {
           // Aksi untuk navigasi ke halaman detail
           Navigator.push(
@@ -409,7 +401,7 @@ class _CategoryGroupTile extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: color.withAlpha((255 * 0.1).round()), shape: BoxShape.circle),
                 child: Icon(icon, color: color, size: 24),
               ),
               const SizedBox(width: 12),
@@ -430,7 +422,7 @@ class _CategoryGroupTile extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold, color: transactions.first.isIncome ? Colors.green : Colors.red),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey), // Indikator panah
+              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey), 
             ],
           ),
         ),
@@ -439,7 +431,6 @@ class _CategoryGroupTile extends StatelessWidget {
   }
 }
 
-// Widget lainnya (_IncomeExpenseWidget, _TransactionTypeSwitcher) tidak berubah
 class _IncomeExpenseWidget extends StatelessWidget {
   final String title;
   final String amount;

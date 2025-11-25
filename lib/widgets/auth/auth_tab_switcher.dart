@@ -6,11 +6,17 @@ class AuthTabSwitcher extends StatelessWidget {
   final VoidCallback onRegisterTap;
 
   const AuthTabSwitcher({
-    Key? key,
+    // ✅ PERBAIKAN 1: Menggunakan super.key
+    super.key, 
     required this.isLogin,
     required this.onLoginTap,
     required this.onRegisterTap,
-  }) : super(key: key);
+  });
+
+  // Helper untuk mengubah opacity menjadi alpha (untuk perbaikan linter)
+  Color _withAlpha(Color color, double opacity) {
+    return color.withAlpha((255 * opacity).round());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +28,8 @@ class AuthTabSwitcher extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            // ✅ PERBAIKAN 2: Mengganti withOpacity dengan _withAlpha
+            color: _withAlpha(Colors.black, 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           )

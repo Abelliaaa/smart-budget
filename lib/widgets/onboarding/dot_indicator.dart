@@ -5,10 +5,11 @@ class DotIndicator extends StatelessWidget {
   final int currentPage;
 
   const DotIndicator({
-    Key? key,
+    // ✅ PERBAIKAN: Menggunakan super.key
+    super.key, 
     required this.itemCount,
     required this.currentPage,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

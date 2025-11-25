@@ -7,12 +7,13 @@ class CustomTextField extends StatefulWidget {
   final bool isPassword;
 
   const CustomTextField({
-    Key? key,
+    // ✅ PERBAIKAN: Menggunakan super.key
+    super.key, 
     required this.controller,
     required this.label,
     required this.icon,
     this.isPassword = false,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();

@@ -6,11 +6,12 @@ class OnboardingPage extends StatelessWidget {
   final String desc;
 
   const OnboardingPage({
-    Key? key,
+    // ✅ PERBAIKAN: Menggunakan sintaks super.key
+    super.key, 
     required this.image,
     required this.title,
     required this.desc,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
